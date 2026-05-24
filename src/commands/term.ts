@@ -38,10 +38,6 @@ export const runTermCommand = async (opts: TermOptions): Promise<void> => {
 
   const ws = new WebSocket(url);
 
-  // We hold a "first frame seen" flag so we can swallow the gateway.ready JSON
-  // line that Hermes emits before the raw byte stream begins.
-  let firstFrame = true;
-
   const onResize = () => {
     if (ws.readyState !== WebSocket.OPEN) return;
     const cols = process.stdout.columns || 80;
@@ -50,6 +46,20 @@ export const runTermCommand = async (opts: TermOptions): Promise<void> => {
   };
 
   const cleanup = () => {
+    // Restore the terminal state Hermes mutated on connect. Without this the
+    // host shell receives raw mouse-tracking events (`<35;col;row M`), the
+    // alternate-screen buffer remains active, or the cursor stays hidden.
+    // Matches what tmux/vim emit on exit.
+    process.stdout.write(
+      "\x1B[?1000l" + // disable X11 mouse reporting
+      "\x1B[?1002l" + // disable cell-motion mouse reporting
+      "\x1B[?1003l" + // disable all-motion mouse reporting
+      "\x1B[?1006l" + // disable SGR extended mouse
+      "\x1B[?1015l" + // disable urxvt extended mouse
+      "\x1B[?2004l" + // disable bracketed-paste
+      "\x1B[?25h"   + // show cursor
+      "\x1B[?1049l",  // leave alternate-screen buffer
+    );
     if (process.stdin.isTTY && process.stdin.setRawMode) {
       try { process.stdin.setRawMode(false); } catch { /* */ }
     }
@@ -77,19 +87,9 @@ export const runTermCommand = async (opts: TermOptions): Promise<void> => {
   });
 
   ws.on("message", (data: WebSocket.RawData, isBinary: boolean) => {
-    // Swallow the first frame if it's the gateway.ready JSON-RPC notification.
-    // Any subsequent text/binary payload is raw terminal bytes.
-    if (firstFrame) {
-      firstFrame = false;
-      const s = isBinary ? "" : data.toString();
-      if (s.includes('"gateway.ready"')) return;
-    }
-    if (isBinary) {
-      process.stdout.write(data as Buffer);
-    } else {
-      // Some payloads arrive as strings; write them as-is.
-      process.stdout.write(data.toString());
-    }
+    // /api/pty is a raw terminal byte stream both ways. Write verbatim.
+    if (isBinary) process.stdout.write(data as Buffer);
+    else process.stdout.write(data.toString());
   });
 
   ws.on("close", (code: number, reason: Buffer) => {
