@@ -6,7 +6,9 @@
   "bin": {
     "xhermes": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/index.ts",
@@ -14,13 +16,17 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "ws": "^8.20.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.6",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.19.2",
     "typescript": "^6.0.3",
     "vitest": "^4.1.6"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

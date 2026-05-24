@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { runAuthCommand } from "./commands/auth.js";
 import { runWhoamiCommand } from "./commands/whoami.js";
 import { runLogoutCommand } from "./commands/logout.js";
+import { runTermCommand } from "./commands/term.js";
 
 const DEFAULT_BASE_URL = process.env.XHERMES_BASE_URL ?? "https://xhermes.com";
 
@@ -24,6 +25,12 @@ program
   .command("logout")
   .description("Revoke this machine's token and forget it locally.")
   .action(async () => runLogoutCommand());
+
+program
+  .command("term")
+  .description("Open an interactive terminal session with your agent.")
+  .option("--bridge-url <url>", "Override the term-bridge WebSocket URL.")
+  .action(async (opts: { bridgeUrl?: string }) => runTermCommand(opts));
 
 program.parseAsync(process.argv).catch((err) => {
   console.error(err instanceof Error ? err.message : String(err));
