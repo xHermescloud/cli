@@ -1,0 +1,75 @@
+import { hostname } from "node:os";
+import { spawn } from "node:child_process";
+import { saveCreds } from "../config.js";
+import { amber, banner, dim } from "../ui.js";
+
+export type DeviceCodeFlowDeps = {
+  baseUrl: string;
+  label: string;
+  log: (s: string) => void;
+  openBrowser: (url: string) => void;
+};
+
+export type DeviceCodeFlowResult = { token: string; baseUrl: string };
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/// Run the device-code flow. Exported separately from `runAuthCommand` so it
+/// can be unit-tested with a mocked fetch and no real browser.
+export const runDeviceCodeFlow = async (
+  deps: DeviceCodeFlowDeps,
+): Promise<DeviceCodeFlowResult> => {
+  const startRes = await fetch(`${deps.baseUrl}/api/cli/auth/start`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ label: deps.label }),
+  });
+  if (!startRes.ok) throw new Error(`auth/start failed: ${startRes.status}`);
+  const start = (await startRes.json()) as {
+    device_code: string;
+    user_code: string;
+    verification_uri: string;
+    interval: number;
+  };
+
+  deps.log("");
+  deps.log(amber(`code: ${start.user_code}`));
+  deps.log(dim(`open: ${start.verification_uri}?code=${start.user_code}`));
+  deps.log("");
+  deps.openBrowser(`${start.verification_uri}?code=${start.user_code}`);
+
+  for (;;) {
+    await sleep(start.interval * 1000);
+    const r = await fetch(`${deps.baseUrl}/api/cli/auth/poll`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ deviceCode: start.device_code }),
+    });
+    const j = (await r.json()) as { status: string; token?: string };
+    if (j.status === "pending") continue;
+    if (j.status === "approved" && j.token) {
+      return { token: j.token, baseUrl: deps.baseUrl };
+    }
+    throw new Error(`authorization ${j.status}`);
+  }
+};
+
+const openInBrowser = (url: string): void => {
+  const cmd =
+    process.platform === "darwin" ? "open" :
+    process.platform === "win32"  ? "start" :
+    "xdg-open";
+  spawn(cmd, [url], { stdio: "ignore", detached: true }).unref();
+};
+
+export const runAuthCommand = async (opts: { baseUrl: string }): Promise<void> => {
+  console.log(banner());
+  const result = await runDeviceCodeFlow({
+    baseUrl: opts.baseUrl,
+    label: hostname(),
+    log: (s) => console.log(s),
+    openBrowser: openInBrowser,
+  });
+  saveCreds(result);
+  console.log(amber("✓ authenticated"));
+};
