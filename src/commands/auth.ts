@@ -52,6 +52,12 @@ export const runDeviceCodeFlow = async (
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ deviceCode: start.device_code }),
     });
+    // Server may rate-limit us. Honour Retry-After and try again.
+    if (r.status === 429) {
+      const retry = Number(r.headers.get("retry-after") ?? start.interval);
+      await sleep(Math.max(retry, 1) * 1000);
+      continue;
+    }
     const j = (await r.json()) as { status: string; token?: string };
     if (j.status === "pending") continue;
     if (j.status === "approved" && j.token) {
