@@ -56,5 +56,5 @@ export const fetchWithVersion = async (
 const throwIfUpgradeRequired = async (res: Response): Promise<void> => {
   if (res.status !== 426) return;
   const body = (await res.clone().json().catch(() => ({}))) as { install?: string };
-  throw new UpgradeRequiredError(body.install ?? "npm i -g xhermes@latest");
+  throw new UpgradeRequiredError(body.install ?? "npm i -g @xhermes/cli@latest");
 };

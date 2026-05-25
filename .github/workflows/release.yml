@@ -1,0 +1,56 @@
+name: Release
+
+# Triggered by pushing a tag matching v*.*.*  (e.g. `git tag v0.1.0 && git push --tags`).
+# Builds, tests, and publishes to npm with provenance — the published tarball
+# is Sigstore-signed and tied to this exact workflow run. Users can verify
+# with `npm audit signatures`.
+#
+# Required repo secrets:
+#   NPM_TOKEN — npm Granular Access Token scoped to @xhermes/cli, "Publish" only.
+#
+# Required workflow permissions (already declared below):
+#   contents: write  — to create the GitHub Release.
+#   id-token: write  — for npm provenance via OIDC. No long-lived secret needed.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      # Guard against tag/package.json drift — the tag (v0.1.0) must match package.json (0.1.0).
+      - name: Verify tag matches package.json version
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match git tag ($TAG_VERSION)"
+            exit 1
+          fi
+      - name: Publish to npm with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
