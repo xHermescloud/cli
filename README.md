@@ -2,7 +2,7 @@
 
 > Talk to your [Hermes agent](https://hermes-agent.nousresearch.com) from your own terminal.
 
-The **xHermes CLI** is a thin terminal client for the [xHermes](https://xhermes.com) platform.  Authenticate with a device-code flow, then `xhermes term` drops you straight into your agent's pty — the same Hermes you provision in the browser, in iTerm/wezterm/Ghostty.
+The **xHermes CLI** is a thin terminal client for the [xHermes](https://xhermes.cloud) platform.  Authenticate with a device-code flow, then `xhermes term` drops you straight into your agent's pty — the same Hermes you provision in the browser, in iTerm/wezterm/Ghostty.
 
 ## Install
 
@@ -26,7 +26,7 @@ The one-shot happy path:
 xhermes
 ```
 
-Authenticates this machine if needed (opens a browser to xhermes.com to approve a short code), then connects you to your agent's terminal.  `Ctrl+C` exits.
+Authenticates this machine if needed (opens a browser to xhermes.cloud to approve a short code), then connects you to your agent's terminal.  `Ctrl+C` exits.
 
 ### Subcommands
 
@@ -40,7 +40,7 @@ Authenticates this machine if needed (opens a browser to xhermes.com to approve 
 
 ### Flags
 
-- `--base-url <url>` — point at a non-default control plane (default: `https://xhermes.com`).
+- `--base-url <url>` — point at a non-default control plane (default: `https://xhermes.cloud`).
 - `--bridge-url <url>` — override the term-bridge WebSocket URL (the CLI normally fetches this from the server during auth).
 
 You can also set `XHERMES_BASE_URL` or `XHERMES_CONFIG_DIR` in the environment.

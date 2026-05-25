@@ -4,7 +4,7 @@ What this CLI trusts, what it doesn't, and how to report issues.
 
 ## Reporting issues
 
-For anything that smells like a vulnerability, please email **security@xhermes.com** rather than opening a public issue.  We'll acknowledge within two business days.
+For anything that smells like a vulnerability, please email **security@xhermes.cloud** rather than opening a public issue.  We'll acknowledge within two business days.
 
 ## Threat model
 
@@ -22,7 +22,7 @@ A thin terminal client that authenticates you to xHermes and pipes raw bytes bet
 | | Trust level |
 |---|---|
 | `npmjs.com` (registry) | Implicit — you `npm install`'d us from there.  See [Verifying the install](#verifying-the-install) below. |
-| xHermes control plane (`xhermes.com`) | Holds your token's HMAC.  Issues, validates, and revokes. |
+| xHermes control plane (`xhermes.cloud`) | Holds your token's HMAC.  Issues, validates, and revokes. |
 | xHermes term-bridge (`wss://term.<…>`) | Sees the **entire raw terminal stream** between you and your agent.  This is operationally necessary — it's the same protocol the browser dashboard uses. |
 | Your local machine | The file `~/.config/xhermes/credentials.json` is mode 0600 and contains a long-lived bearer token.  Anyone with read access to your home directory can use your agent. |
 
@@ -35,7 +35,7 @@ A thin terminal client that authenticates you to xHermes and pipes raw bytes bet
 
 - **Issuance.**  The plaintext token is generated server-side, returned to the CLI **exactly once** via the device-code poll endpoint, then nulled out of the auth-request row.  The server stores only an HMAC-SHA256 keyed by a server-side pepper.
 - **Storage on disk.**  `~/.config/xhermes/credentials.json`, mode 0600.  We do not use the system keychain.  If you want OS-keychain storage, file an issue — happy to add it.
-- **Use.**  Sent as `Authorization: Bearer <token>` to xhermes.com APIs and as a `?token=…` query string to the term-bridge WebSocket (HTTP headers aren't portable on WS upgrade requests).
+- **Use.**  Sent as `Authorization: Bearer <token>` to xhermes.cloud APIs and as a `?token=…` query string to the term-bridge WebSocket (HTTP headers aren't portable on WS upgrade requests).
 - **Revocation.**
   - `xhermes logout` — revokes server-side and clears the local file.
   - Dashboard → CLI access panel — revoke individual tokens by label.

@@ -6,7 +6,7 @@ End-to-end of what happens when you run `xhermes`.
 
 ```
 ┌─────────────────┐          ┌────────────────┐          ┌──────────────────┐
-│  @xhermes/cli   │          │  xhermes.com   │          │  agent fleet     │
+│  @xhermes/cli   │          │  xhermes.cloud   │          │  agent fleet     │
 │  (your machine) │          │  (control      │          │  (Hetzner box)   │
 │                 │          │   plane)       │          │                  │
 │  - device-code  │  HTTPS   │  - auth API    │  Postgres│  - term-bridge   │
@@ -36,7 +36,7 @@ The CLI never sees the Hermes session token, the agent's container ID, or the Po
 ## The device-code flow
 
 ```
-CLI                            xhermes.com (web)            user's browser
+CLI                            xhermes.cloud (web)            user's browser
  │                                   │                            │
  │  POST /api/cli/auth/start         │                            │
  │  { label: "macbook-pro" }         │                            │

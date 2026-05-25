@@ -7,7 +7,7 @@ import { runWhoamiCommand } from "./commands/whoami.js";
 import { runLogoutCommand } from "./commands/logout.js";
 import { runTermCommand } from "./commands/term.js";
 
-const DEFAULT_BASE_URL = process.env.XHERMES_BASE_URL ?? "https://xhermes.com";
+const DEFAULT_BASE_URL = process.env.XHERMES_BASE_URL ?? "https://xhermes.cloud";
 
 const program = new Command();
 program.name("xhermes").version(CLI_VERSION);
