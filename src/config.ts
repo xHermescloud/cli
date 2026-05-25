@@ -5,7 +5,13 @@ import { join } from "node:path";
 /// On-disk CLI credentials. Stored at $XHERMES_CONFIG_DIR/credentials.json or,
 /// failing that, $XDG_CONFIG_HOME/xhermes/ or ~/.config/xhermes/. Mode 600.
 
-export type Creds = { token: string; baseUrl: string };
+export type Creds = {
+  token: string;
+  baseUrl: string;
+  /** Server-supplied WS URL of the term-bridge. Optional for older creds files;
+   *  when absent the CLI derives a dev fallback from baseUrl. */
+  bridgeUrl?: string;
+};
 
 export const credentialsPath = (): string => {
   const override = process.env.XHERMES_CONFIG_DIR;

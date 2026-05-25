@@ -10,7 +10,13 @@ export type DeviceCodeFlowDeps = {
   openBrowser: (url: string) => void;
 };
 
-export type DeviceCodeFlowResult = { token: string; baseUrl: string };
+export type DeviceCodeFlowResult = {
+  token: string;
+  baseUrl: string;
+  /** Bridge WS URL supplied by the server; absent if the server has no
+   *  CLI_BRIDGE_URL configured (dev — the CLI then derives a fallback). */
+  bridgeUrl?: string;
+};
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -30,6 +36,7 @@ export const runDeviceCodeFlow = async (
     user_code: string;
     verification_uri: string;
     interval: number;
+    bridge_url?: string;
   };
 
   deps.log("");
@@ -48,7 +55,11 @@ export const runDeviceCodeFlow = async (
     const j = (await r.json()) as { status: string; token?: string };
     if (j.status === "pending") continue;
     if (j.status === "approved" && j.token) {
-      return { token: j.token, baseUrl: deps.baseUrl };
+      return {
+        token: j.token,
+        baseUrl: deps.baseUrl,
+        bridgeUrl: start.bridge_url || undefined,
+      };
     }
     throw new Error(`authorization ${j.status}`);
   }

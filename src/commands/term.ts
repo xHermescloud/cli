@@ -11,8 +11,9 @@ import { amber, dim, red } from "../ui.js";
 const RESIZE_ESCAPE = (cols: number, rows: number): string =>
   `\x1B[RESIZE:${cols};${rows}]`;
 
-/// Default mapping from control-plane base URL to bridge WS URL.
-/// http://host:3000 → ws://host:3001 ; https:// → wss:// with same +1 port logic.
+/// Last-resort bridge URL when neither --bridge-url nor creds.bridgeUrl is set.
+/// http://host:3000 → ws://host:3001 ; https:// → wss:// with the same +1 port.
+/// Dev only — production CLIs always have a server-supplied bridgeUrl.
 const defaultBridgeUrl = (baseUrl: string): string => {
   const u = new URL(baseUrl);
   const wsProto = u.protocol === "https:" ? "wss:" : "ws:";
@@ -26,7 +27,8 @@ export const runTermCommand = async (opts: TermOptions): Promise<void> => {
   const creds = loadCreds();
   if (!creds) throw new NotAuthenticatedError();
 
-  const bridge = opts.bridgeUrl ?? defaultBridgeUrl(creds.baseUrl);
+  // Precedence: --bridge-url flag > server-supplied (stored at auth time) > dev fallback.
+  const bridge = opts.bridgeUrl ?? creds.bridgeUrl ?? defaultBridgeUrl(creds.baseUrl);
   const url = `${bridge}?token=${encodeURIComponent(creds.token)}`;
 
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
