@@ -94,12 +94,13 @@ export const runTermCommand = async (opts: TermOptions): Promise<void> => {
 
   ws.on("close", (code: number, reason: Buffer) => {
     cleanup();
-    const reasonStr = reason?.toString() || "";
     if (code === 1000 || code === 1005) {
       process.stderr.write("\n" + dim("● disconnected") + "\n");
       process.exit(0);
     }
-    process.stderr.write("\n" + red(`● disconnected (${code}${reasonStr ? ` ${reasonStr}` : ""})`) + "\n");
+    const hint = closeCodeHint(code, reason?.toString() || "");
+    process.stderr.write("\n" + red(`● ${hint.headline}`) + "\n");
+    if (hint.body) process.stderr.write(dim(hint.body) + "\n");
     process.exit(1);
   });
 
@@ -108,4 +109,33 @@ export const runTermCommand = async (opts: TermOptions): Promise<void> => {
     process.stderr.write("\n" + red(`error: ${err.message}`) + "\n");
     process.exit(1);
   });
+};
+
+/// Map bridge-side close codes to human-readable copy. The bridge uses
+/// 4401 (auth), 4409 (no active agent), 4502 (upstream unreachable) — see
+/// apps/web/src/server/termBridge.ts. Unknown codes pass through verbatim
+/// so we never hide diagnostics.
+const closeCodeHint = (
+  code: number,
+  reason: string,
+): { headline: string; body?: string } => {
+  switch (code) {
+    case 4401:
+      return {
+        headline: "authentication failed",
+        body: "Your token is invalid or revoked. Run `xhermes logout` then `xhermes auth` again.",
+      };
+    case 4409:
+      return {
+        headline: "no active agent",
+        body: "Provision one in the dashboard, then try again.",
+      };
+    case 4502:
+      return {
+        headline: "agent unreachable",
+        body: "It may be waking from hibernation — try again in a moment.",
+      };
+    default:
+      return { headline: `disconnected (${code}${reason ? ` ${reason}` : ""})` };
+  }
 };
