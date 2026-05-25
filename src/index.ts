@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { loadCreds } from "./config.js";
+import { CLI_VERSION } from "./version.js";
 import { runAuthCommand } from "./commands/auth.js";
 import { runWhoamiCommand } from "./commands/whoami.js";
 import { runLogoutCommand } from "./commands/logout.js";
@@ -9,7 +10,7 @@ import { runTermCommand } from "./commands/term.js";
 const DEFAULT_BASE_URL = process.env.XHERMES_BASE_URL ?? "https://xhermes.com";
 
 const program = new Command();
-program.name("xhermes").version("0.0.1");
+program.name("xhermes").version(CLI_VERSION);
 
 /// Default action: authenticate if needed, then drop into the agent terminal.
 /// This is the one-command happy path — `xhermes` is enough.

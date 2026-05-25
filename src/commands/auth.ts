@@ -1,6 +1,7 @@
 import { hostname } from "node:os";
 import { spawn } from "node:child_process";
 import { saveCreds } from "../config.js";
+import { fetchWithVersion } from "../api.js";
 import { amber, banner, dim } from "../ui.js";
 
 export type DeviceCodeFlowDeps = {
@@ -25,7 +26,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 export const runDeviceCodeFlow = async (
   deps: DeviceCodeFlowDeps,
 ): Promise<DeviceCodeFlowResult> => {
-  const startRes = await fetch(`${deps.baseUrl}/api/cli/auth/start`, {
+  const startRes = await fetchWithVersion(`${deps.baseUrl}/api/cli/auth/start`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ label: deps.label }),
@@ -47,7 +48,7 @@ export const runDeviceCodeFlow = async (
 
   for (;;) {
     await sleep(start.interval * 1000);
-    const r = await fetch(`${deps.baseUrl}/api/cli/auth/poll`, {
+    const r = await fetchWithVersion(`${deps.baseUrl}/api/cli/auth/poll`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ deviceCode: start.device_code }),
